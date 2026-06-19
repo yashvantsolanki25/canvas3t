@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canvas3t-backend
+  namespace: canvas3t
+  labels:
+    app: canvas3t-backend
+    component: backend
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: canvas3t-backend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: canvas3t-backend
+        component: backend
+        version: v1
+    spec:
+      imagePullSecrets:
+        - name: ecr-secret
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: backend
+          image: 066255738814.dkr.ecr.ap-south-1.amazonaws.com/canvas3t-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+              name: http
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: canvas3t-config
+            - secretRef:
+                name: canvas3t-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - mountPath: /data/db
+              name: db-storage
+            - mountPath: /data/images
+              name: images-storage
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+            timeoutSeconds: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+      volumes:
+        - name: db-storage
+          persistentVolumeClaim:
+            claimName: canvas3t-db-ebs
+        - name: images-storage
+          persistentVolumeClaim:
+            claimName: canvas3t-images-ebs

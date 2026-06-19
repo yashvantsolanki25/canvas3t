@@ -1,0 +1,44 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: canvas3t-cluster
+  region: ap-south-1
+  version: "1.36"
+vpc:
+  id: vpc-0050b7bad35196b0d
+  cidr: 10.0.0.0/16
+  subnets:
+    public:
+      ap-south-1a:
+        id: subnet-05516b7df891c79db
+      ap-south-1b:
+        id: subnet-03ee60c86e59290f3
+    private:
+      ap-south-1a:
+        id: subnet-0b88e3a25e0fb4a20
+      ap-south-1b:
+        id: subnet-0fd7dee19b54c0faa
+nodeGroups:
+  - name: canvas3t-private-nodes
+    instanceType: m7i-flex.large
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 4
+    privateNetworking: true
+    ssh:
+      allow: false
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+        externalDNS: false
+        certManager: false
+        albIngress: true
+        imageBuilder: false
+    tags:
+      Role: canvas3t-node
+    labels:
+      role: worker
+    volumeSize: 50
+    availabilityZones:
+      - ap-south-1a
+      - ap-south-1b

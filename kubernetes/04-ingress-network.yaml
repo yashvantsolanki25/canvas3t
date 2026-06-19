@@ -1,0 +1,81 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: canvas3t-network-policy
+  namespace: canvas3t
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: canvas3t
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: canvas3t
+  - to:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canvas3t-ingress
+  namespace: canvas3t
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    # Uncomment below for HTTPS with ALB (requires ACM certificate)
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    # alb.ingress.kubernetes.io/ssl-redirect: '443'
+    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERT_ID
+    alb.ingress.kubernetes.io/load-balancer-name: canvas3t-alb
+    alb.ingress.kubernetes.io/tags: "Environment=production,Application=canvas3t"
+spec:
+  rules:
+  - host: yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: canvas3t-frontend
+            port:
+              number: 4173
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: canvas3t-backend
+            port:
+              number: 5000
+  - host: www.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: canvas3t-frontend
+            port:
+              number: 4173
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: canvas3t-backend
+            port:
+              number: 5000

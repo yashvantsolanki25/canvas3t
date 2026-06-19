@@ -1,0 +1,125 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canvas3t-frontend
+  namespace: canvas3t
+  labels:
+    app: canvas3t-frontend
+    component: frontend
+    version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: canvas3t-frontend
+  template:
+    metadata:
+      labels:
+        app: canvas3t-frontend
+        component: frontend
+        version: v1
+    spec:
+      securityContext:
+        fsGroup: 0
+      
+      containers:
+      - name: frontend
+        image: "066255738814.dkr.ecr.ap-south-1.amazonaws.com/canvas3t-frontend:latest"
+        imagePullPolicy: Always
+        
+        ports:
+        - containerPort: 4173
+          name: http
+          protocol: TCP
+        
+        env:
+        - name: VITE_API_URL
+          value: "https://api.yourdomain.com"  # Update this to your API endpoint
+        
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+        
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 4173
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 4173
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+          successThreshold: 1
+        
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+
+      
+      imagePullSecrets:
+      - name: ecr-secret
+      
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - canvas3t-frontend
+              topologyKey: kubernetes.io/hostname
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: canvas3t-frontend
+  namespace: canvas3t
+  labels:
+    app: canvas3t-frontend
+    component: frontend
+spec:
+  type: ClusterIP
+  sessionAffinity: None
+  ports:
+  - name: http
+    port: 4173
+    targetPort: 4173
+    protocol: TCP
+  selector:
+    app: canvas3t-frontend
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: canvas3t-frontend-pdb
+  namespace: canvas3t
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: canvas3t-frontend

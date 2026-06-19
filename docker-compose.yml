@@ -1,0 +1,62 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: canvas3t_api
+    environment:
+      FLASK_APP: app
+      FLASK_ENV: development
+      # Persistent secret for token signing; change in production
+      SECRET_KEY: "canvas3t-secret-please-change"
+      IMAGE_DIR: /app/images
+      DB_PATH: /app/db/app.db
+      RESULTS_PER_PAGE: 24
+    volumes:
+      # bind-mount backend source for live code edits (development)
+      - ./backend:/app:rw
+      # named volume for images (persistent + performant)
+      - canvas3t_images:/app/images:rw
+      # named volume for database (persistent + performant)
+      - canvas3t_db:/app/db:rw
+    ports:
+      - "5000:5000"
+    command: flask run --host=0.0.0.0 --port=5000
+    networks:
+      - canvas3t_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_URL: http://web:5000
+    container_name: canvas3t_frontend
+    environment:
+      VITE_API_URL: http://web:5000
+    volumes:
+      # bind-mount frontend source for live code edits
+      - ./frontend:/app/frontend:rw
+    ports:
+      - "5173:4173"
+    networks:
+      - canvas3t_net
+    depends_on:
+      - web
+
+volumes:
+  # named volumes persist data across container restarts/removals (unless you use -v flag on down)
+  canvas3t_images:
+    driver: local
+  canvas3t_db:
+    driver: local
+
+networks:
+  canvas3t_net:
+    driver: bridge
+

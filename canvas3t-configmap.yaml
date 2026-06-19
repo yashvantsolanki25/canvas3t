@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: canvas3t-config
+  namespace: canvas3t
+data:
+  FLASK_APP: app
+  FLASK_ENV: production
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUNBUFFERED: "1"
+  RESULTS_PER_PAGE: "24"
+  DB_PATH: /data/db/app.db
+  DB_DIR: /data/db
+  IMAGE_DIR: /data/images
+  THUMBNAIL_DIR: /data/images/thumbnails
+  DATA_DIR: /data
+  ENABLE_RATE_LIMITS: "true"
+  RATE_LIMIT: "200/minute"

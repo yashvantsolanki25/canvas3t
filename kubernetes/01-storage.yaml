@@ -1,0 +1,55 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: canvas3t-gp2
+provisioner: kubernetes.io/aws-ebs
+allowVolumeExpansion: true
+parameters:
+  type: gp3
+  iops: "100"
+  throughput: "125"
+  encrypted: "true"
+  tagSpecification_Name: canvas3t-pv
+volumeBindingMode: WaitForFirstConsumer
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: canvas3t-db-pvc
+  namespace: canvas3t
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: canvas3t-gp2
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: canvas3t-images-pvc
+  namespace: canvas3t
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: canvas3t-gp2
+  resources:
+    requests:
+      storage: 50Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: canvas3t-logs-pvc
+  namespace: canvas3t
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: canvas3t-gp2
+  resources:
+    requests:
+      storage: 5Gi

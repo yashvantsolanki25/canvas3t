@@ -1,0 +1,70 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canvas3t-ingress
+  namespace: canvas3t
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/load-balancer-name: canvas3t-alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/tags: Environment=production,Application=canvas3t
+    # Listen on both HTTP (80) and HTTPS (443)
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    # Redirect all HTTP traffic to HTTPS
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    # ACM certificate for myart.run.place (valid until 2027)
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:066255738814:certificate/5307d065-1488-4cf0-b29d-2559e9524fdb
+    # Use recommended TLS policy
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-2021-06
+spec:
+  rules:
+  # myart.run.place — named host rule for HTTPS
+  - host: myart.run.place
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: canvas3t-backend
+            port:
+              number: 5000
+      - path: /media
+        pathType: Prefix
+        backend:
+          service:
+            name: canvas3t-backend
+            port:
+              number: 5000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: canvas3t-frontend
+            port:
+              number: 4173
+  # Catch-all — ALB direct URL still works
+  - http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: canvas3t-backend
+            port:
+              number: 5000
+      - path: /media
+        pathType: Prefix
+        backend:
+          service:
+            name: canvas3t-backend
+            port:
+              number: 5000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: canvas3t-frontend
+            port:
+              number: 4173

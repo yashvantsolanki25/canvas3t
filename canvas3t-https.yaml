@@ -1,0 +1,70 @@
+---
+# Let's Encrypt production ClusterIssuer
+# Uses HTTP-01 challenge via the nginx ingress controller
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: admin@myart.run.place
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx
+
+---
+# Nginx Ingress for canvas3t with TLS
+# Replaces the ALB ingress for myart.run.place
+# cert-manager will auto-provision the Let's Encrypt certificate
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canvas3t-nginx-ingress
+  namespace: canvas3t
+  annotations:
+    # Use nginx ingress class
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # Increase body size limit for image uploads (20MB)
+    nginx.ingress.kubernetes.io/proxy-body-size: "25m"
+    # Timeouts for large uploads
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    # cert-manager will manage the TLS secret
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - myart.run.place
+      secretName: canvas3t-tls-cert
+  rules:
+    - host: myart.run.place
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: canvas3t-backend
+                port:
+                  number: 5000
+          - path: /media
+            pathType: Prefix
+            backend:
+              service:
+                name: canvas3t-backend
+                port:
+                  number: 5000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: canvas3t-frontend
+                port:
+                  number: 4173
