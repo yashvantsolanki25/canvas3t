@@ -15,13 +15,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend /app
 
 ENV FLASK_APP=app \
-    IMAGE_DIR=/app/images \
-    DB_PATH=/app/db/app.db \
     PYTHONPATH=/app
 
-RUN mkdir -p /app/images /app/db
+# Create local fallback dirs for non-k8s environments (docker-compose, local dev)
+RUN mkdir -p /app/images /app/db /data/images /data/db
 
 EXPOSE 5000
 
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "wsgi:app"]
+CMD ["gunicorn", \
+     "--bind", "0.0.0.0:5000", \
+     "--workers", "2", \
+     "--timeout", "120", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "wsgi:app"]
 

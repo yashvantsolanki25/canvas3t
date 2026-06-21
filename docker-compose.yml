@@ -7,10 +7,11 @@ services:
     environment:
       FLASK_APP: app
       FLASK_ENV: development
-      # Persistent secret for token signing; change in production
       SECRET_KEY: "canvas3t-secret-please-change"
       IMAGE_DIR: /app/images
       DB_PATH: /app/db/app.db
+      DB_DIR: /app/db
+      DATA_DIR: /app
       RESULTS_PER_PAGE: 24
     volumes:
       # bind-mount backend source for live code edits (development)

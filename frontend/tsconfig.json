@@ -14,7 +14,11 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "./pkg/canvas3t_tools": ["./src/wasm/pkg/canvas3t_tools"],
+      "../wasm/pkg/canvas3t_tools": ["./src/wasm/pkg/canvas3t_tools"]
+    }
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]

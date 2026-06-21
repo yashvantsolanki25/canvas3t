@@ -17,3 +17,6 @@ frontend/src/wasm/pkg/*
 !frontend/src/wasm/pkg/.gitkeep
 wasm/pkg/
 
+
+# Kubernetes secrets — never commit filled-in values
+canvas3t-secrets.yaml

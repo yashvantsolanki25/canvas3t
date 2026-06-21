@@ -43,23 +43,47 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (typeof window !== "undefined") {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(response));
       }
-      set({ user: response.user, token: response.token, status: "authenticated" });
-    } catch (error) {
-      set({ status: "error", error: "Invalid credentials" });
+      set({ user: response.user, token: response.token, status: "authenticated", error: undefined });
+    } catch (error: unknown) {
+      let message = "Invalid username or password";
+      if (
+        error &&
+        typeof error === "object" &&
+        "response" in error &&
+        error.response &&
+        typeof error.response === "object" &&
+        "data" in error.response
+      ) {
+        const data = (error.response as { data?: { error?: string } }).data;
+        if (data?.error) message = data.error;
+      }
+      set({ status: "error", error: message });
       throw error;
     }
   },
   register: async ({ username, email, password }) => {
     set({ status: "loading", error: undefined });
     try {
-      const user = await registerUser({ username, email, password });
-      // Immediately log the user in using same credentials
-      await get().login({ username, password });
-      if (!get().user) {
-        set({ user, status: "authenticated" });
+      const response = await registerUser({ username, email, password });
+      if (typeof window !== "undefined") {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(response));
       }
-    } catch (error) {
-      set({ status: "error", error: "Registration failed" });
+      set({ user: response.user, token: response.token, status: "authenticated", error: undefined });
+    } catch (error: unknown) {
+      // Surface the actual server error message so the user knows what went wrong
+      let message = "Registration failed";
+      if (
+        error &&
+        typeof error === "object" &&
+        "response" in error &&
+        error.response &&
+        typeof error.response === "object" &&
+        "data" in error.response
+      ) {
+        const data = (error.response as { data?: { error?: string } }).data;
+        if (data?.error) message = data.error;
+      }
+      set({ status: "error", error: message });
       throw error;
     }
   },

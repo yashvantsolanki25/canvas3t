@@ -47,7 +47,7 @@ def create_app(config_class: type[Config] | None = None) -> Flask:
     with app.app_context():
         _seed_default_user()
     
-    # Health check route — excluded from rate limiting via SimpleLimiter
+    # Health check route — excluded from rate limiting
     @app.get("/api/health")
     def health():
         return {"status": "ok"}, 200
@@ -73,10 +73,12 @@ def _register_blueprints(app: Flask) -> None:
     from app.api.users import users_bp
     from app.api.paintings import paintings_bp
     from app.api.media import media_bp
-    
+    from app.api.search import search_bp
+
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(users_bp, url_prefix="/api/users")
     app.register_blueprint(paintings_bp, url_prefix="/api/paintings")
+    app.register_blueprint(search_bp, url_prefix="/api/search")
     app.register_blueprint(media_bp, url_prefix="/media")
 
 

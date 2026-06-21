@@ -2,7 +2,7 @@
 import os
 from flask import Blueprint, current_app, send_from_directory, jsonify
 
-media_bp = Blueprint("media", __name__)
+media_bp = Blueprint("media_v1", __name__)
 
 
 @media_bp.get("/images/<path:filename>")
