@@ -39,7 +39,7 @@ spec:
         
         env:
         - name: VITE_API_URL
-          value: "https://api.yourdomain.com"  # Update this to your API endpoint
+          value: "https://myart.run.place"  # Update this to your API endpoint
         
         resources:
           requests:

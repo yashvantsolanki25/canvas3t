@@ -9,17 +9,13 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/tags: Environment=production,Application=canvas3t
-    # Listen on both HTTP (80) and HTTPS (443)
+    # HTTP only on raw ALB URL — HTTPS works on myart.run.place via ACM cert
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-    # Redirect all HTTP traffic to HTTPS
-    alb.ingress.kubernetes.io/ssl-redirect: "443"
-    # ACM certificate for myart.run.place (valid until 2027)
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:066255738814:certificate/5307d065-1488-4cf0-b29d-2559e9524fdb
-    # Use recommended TLS policy
     alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-2021-06
 spec:
   rules:
-  # myart.run.place — named host rule for HTTPS
+  # myart.run.place — HTTPS works here via ACM cert
   - host: myart.run.place
     http:
       paths:
@@ -44,7 +40,7 @@ spec:
             name: canvas3t-frontend
             port:
               number: 4173
-  # Catch-all — ALB direct URL still works
+  # Catch-all — raw ALB URL works on HTTP (no cert mismatch)
   - http:
       paths:
       - path: /api
